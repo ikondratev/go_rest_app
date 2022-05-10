@@ -1,2 +1,12 @@
 # go_rest_app
-Realisation rest api in golang
+
+Simple realisation rest api in golang
+
+## build
+```sh
+go build main/app.go
+```
+## start
+```sh
+./main/app
+```
