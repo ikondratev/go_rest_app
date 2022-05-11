@@ -32,8 +32,16 @@ func env(key, defaultValue string) string {
 // Add log for requrest as middleware
 func logreq(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Printf("pathL %s", r.URL.Path)
-			f(w, r)
+			switch r.Method {
+			case "GET":
+				http.Error(w, "404 not found.", http.StatusNotFound)
+				return
+			case "POST":
+				log.Printf("pathL %s", r.URL.Path)
+				f(w, r)
+			default:
+				fmt.Fprintf(w, "Sorry, only POST methods are supported.")	
+			}
 	})
 }
 
