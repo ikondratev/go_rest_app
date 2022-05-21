@@ -15,6 +15,7 @@ type App struct {
 // Start server with args
 func (a *App) Start() {
 	http.Handle("/ping", logreq(ping))
+	http.Handle("/greeting", logreq(greeting))
 	addr := fmt.Sprintf(":%s", a.Port)
 	log.Printf("Starting app on %s", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
@@ -34,8 +35,8 @@ func logreq(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			switch r.Method {
 			case "GET":
-				http.Error(w, "404 not found.", http.StatusNotFound)
-				return
+				log.Printf("pathL %s", r.URL.Path)
+				f(w, r)
 			case "POST":
 				log.Printf("pathL %s", r.URL.Path)
 				f(w, r)
@@ -48,6 +49,11 @@ func logreq(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
 // Ping page
 func ping(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Pong\n")
+}
+
+// Greeting page
+func greeting(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello\n")
 }
 
 //  Main point
