@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"go_rest_app/main/clients/telegram"
@@ -14,19 +15,21 @@ type App struct {
 	Port string
 }
 
+type RequestBody struct {
+	Message string `json:"message"`
+}
+
 const (
 	tgBotHost = "api.telegram.org"
 )
 
-// Start server with args
-func (a *App) Start() {
-	http.Handle("/ping", logreq(ping))
+func (a *App) Start(client *telegram.Client) {
+	http.Handle("/ping", logreq(okPage, client))
 	addr := fmt.Sprintf(":%s", a.Port)
 	log.Printf("Starting app on %s", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
-// Load env
 func env(key, defaultValue string) string {
 	val, ok := os.LookupEnv(key)
 	if !ok {
@@ -35,15 +38,20 @@ func env(key, defaultValue string) string {
 	return val
 }
 
-// Add log for requrest as middleware
-func logreq(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
+func logreq(f func(w http.ResponseWriter, r *http.Request), client *telegram.Client) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			switch r.Method {
 			case "GET":
 				http.Error(w, "404 not found.", http.StatusNotFound)
 				return
 			case "POST":
-				log.Printf("pathL %s", r.URL.Path)
+				log.Printf("path %s", r.URL.Path)
+
+				if err := handlePost(w, r, client); err != nil {
+					http.Error(w, "400 not found.", http.StatusBadRequest)
+					return
+				}
+
 				f(w, r)
 			default:
 				fmt.Fprintf(w, "Sorry, only POST methods are supported.")	
@@ -51,9 +59,26 @@ func logreq(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
 	})
 }
 
-// Ping page
-func ping(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Pong\n")
+func handlePost(w http.ResponseWriter, r *http.Request, client *telegram.Client) error {
+	var requestBody RequestBody
+	err := json.NewDecoder(r.Body).Decode(&requestBody)
+	if err != nil {
+		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+		return err
+	}
+
+	messageFromBody := requestBody.Message
+
+	if err := client.SendMessage(564138790, messageFromBody); err != nil {
+		log.Fatal("error: ", err)
+		return err
+	}
+
+	return nil
+}
+
+func okPage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "OK")
 }
 
 func mustToken() string {
@@ -72,11 +97,9 @@ func mustToken() string {
 	return *token
 }
 
-//  Main point
 func main() {
 	server := App{
 			Port: env("PORT", "7878"),
 	}
-	telegram.New(tgBotHost, mustToken()).SendMessage(123, "message")
-	server.Start()
+	server.Start(telegram.New(tgBotHost, mustToken()))
 }

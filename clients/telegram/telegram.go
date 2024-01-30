@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"go_rest_app/main/lib/e"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -55,6 +56,9 @@ func (c *Client) Updates(offsest int, limit int) (updates []Update, err error ) 
 }
 
 func (c *Client) SendMessage(chatId int, text string) error {
+	log.Print("some message")
+
+	
 	q := url.Values{}
 	q.Add("chat_id", strconv.Itoa(chatId))
 	q.Add("text", text)
