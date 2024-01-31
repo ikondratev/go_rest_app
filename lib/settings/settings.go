@@ -10,21 +10,25 @@ const (
 	defaultPort = "7878"
 	serverPort = "PORT"
 	tgToken = "TOKEN"
+	secret = "SECRET"
 )
 
 type Settings struct {
 	Port 	 string
-	TgToken string
+	TgToken  string
+	Secret	 string
 }
 
 func New(file string) *Settings {
 	_ = setEnvFromFile(file)
 	port := env(serverPort, defaultPort)
 	token := env(tgToken, "")
+	secret := env(secret, "")
 	
 	return &Settings{
 		Port: 	 port,
 		TgToken: token,
+		Secret: secret,
 	}
 }
 

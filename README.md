@@ -11,8 +11,9 @@ touch .env
 -----------
 example .env fiele
 
-TOKEN=telegram_token
-PORT=custom_port:defualt_port:7875
+TOKEN=telegram-token
+PORT=custom-port:defualt_port:7875
+SECRET=secret-auth-token
 ```
 ## build
 ```sh

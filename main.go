@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,21 +12,27 @@ import (
 )
 
 type App struct {
-	Port string
+	Port     string
+	Secret   string
 	TgClient *telegram.Client
 }
 
 type RequestBody struct {
-	Message string `json:"message"`
+	Message   string `json:"message"`
 }
 
 const (
 	tgBotHost = "api.telegram.org"
+	auth_token = "token"
 	channelID = 564138790
 )
 
+var (
+	ErrUnknownEvent = errors.New("unknown event")
+)
+
 func (a *App) Start() {
-	http.Handle("/ping", a.logreq(ok))
+	http.Handle("/send", a.logreq(ok))
 	addr := fmt.Sprintf(":%s", a.Port)
 	log.Printf("Starting app on %s", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
@@ -36,6 +43,11 @@ func (a *App) logreq(f func(w http.ResponseWriter, r *http.Request)) http.Handle
 			switch r.Method {
 			case "POST":
 				log.Printf("path %s", r.URL.Path)
+
+				if r.URL.Query().Get(auth_token) != a.Secret {
+					http.Error(w, "forbidden.", http.StatusForbidden)
+					return
+				}
 
 				if err := a.handlePost(w, r); err != nil {
 					http.Error(w, "bad request.", http.StatusBadRequest)
@@ -58,7 +70,7 @@ func (a *App) handlePost(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	messageFromBody := requestBody.Message
-
+	
 	if err := a.TgClient.SendMessage(channelID, messageFromBody); err != nil {
 		return err
 	}
@@ -75,6 +87,7 @@ func main() {
 	server := App{
 			Port: settings.Port,
 			TgClient: telegram.New(tgBotHost, settings.TgToken),
+			Secret: settings.Secret,
 	}
 	server.Start()
 }
