@@ -23,7 +23,7 @@ type RequestBody struct {
 
 const (
 	tgBotHost = "api.telegram.org"
-	auth_token = "token"
+	auth_token = "Authentication"
 	channelID = 564138790
 )
 
@@ -41,10 +41,10 @@ func (a *App) Start() {
 func (a *App) logreq(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			switch r.Method {
-			case "POST":
+			case http.MethodPost: 
 				log.Printf("path %s", r.URL.Path)
 
-				if r.URL.Query().Get(auth_token) != a.Secret {
+				if r.Header.Get(auth_token) != a.Secret {
 					http.Error(w, "forbidden.", http.StatusForbidden)
 					return
 				}
