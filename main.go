@@ -12,9 +12,10 @@ import (
 )
 
 type App struct {
-	Port     string
-	Secret   string
-	TgClient *telegram.Client
+	Port      string
+	Secret    string
+	ChannelID int
+	TgClient  *telegram.Client
 }
 
 type RequestBody struct {
@@ -22,9 +23,7 @@ type RequestBody struct {
 }
 
 const (
-	tgBotHost = "api.telegram.org"
 	auth_token = "Authentication"
-	channelID = 564138790
 )
 
 var (
@@ -71,7 +70,7 @@ func (a *App) handlePost(w http.ResponseWriter, r *http.Request) error {
 
 	messageFromBody := requestBody.Message
 	
-	if err := a.TgClient.SendMessage(channelID, messageFromBody); err != nil {
+	if err := a.TgClient.SendMessage(a.ChannelID, messageFromBody); err != nil {
 		return err
 	}
 
@@ -86,7 +85,8 @@ func main() {
 	settings := settings.New(".env")
 	server := App{
 			Port: settings.Port,
-			TgClient: telegram.New(tgBotHost, settings.TgToken),
+			ChannelID: settings.ChannelID,
+			TgClient: telegram.New(settings.TgToken),
 			Secret: settings.Secret,
 	}
 	server.Start()

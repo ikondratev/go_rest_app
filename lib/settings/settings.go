@@ -3,6 +3,7 @@ package settings
 import (
 	"bufio"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -11,12 +12,14 @@ const (
 	serverPort = "PORT"
 	tgToken = "TOKEN"
 	secret = "SECRET"
+	tgChannel = "CHANEL_ID"
 )
 
 type Settings struct {
-	Port 	 string
-	TgToken  string
-	Secret	 string
+	Port 	  string
+	TgToken   string
+	Secret	  string
+	ChannelID int
 }
 
 func New(file string) *Settings {
@@ -24,11 +27,13 @@ func New(file string) *Settings {
 	port := env(serverPort, defaultPort)
 	token := env(tgToken, "")
 	secret := env(secret, "")
+	channelID, _ := strconv.Atoi(env(tgChannel, ""))
 	
 	return &Settings{
 		Port: 	 port,
 		TgToken: token,
 		Secret: secret,
+		ChannelID: channelID,
 	}
 }
 

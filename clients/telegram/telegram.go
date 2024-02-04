@@ -20,11 +20,12 @@ type Client struct {
 const (
 	getUpdatesMethod = "getUpdates"
 	sendMessageMethod = "sendMessage"
+	bot_host = "api.telegram.org"
 )
 
-func New(host string, token string) *Client {
+func New(token string) *Client {
 	return &Client {
-		host: host,
+		host: bot_host,
 		basePath: newBasePath(token),
 		client: http.Client{},
 	}
