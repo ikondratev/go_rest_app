@@ -2,3 +2,4 @@
 *.sh
 /bin/*
 .env
+settings/*.yaml
