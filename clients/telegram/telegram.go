@@ -9,11 +9,13 @@ import (
 	"strconv"
 
 	"go_rest_app/main/lib/e"
+	"go_rest_app/main/lib/settings"
 )
 
 type Client struct {
 	host string
 	basePath string
+	channelID int
 	client http.Client
 }
 
@@ -23,10 +25,11 @@ const (
 	bot_host = "api.telegram.org"
 )
 
-func New(token string) *Client {
+func New(s *settings.Telegram) *Client {
 	return &Client {
 		host: bot_host,
-		basePath: newBasePath(token),
+		basePath: newBasePath(s.Token),
+		channelID: s.ChatID,
 		client: http.Client{},
 	}
 }
@@ -56,9 +59,9 @@ func (c *Client) Updates(offsest int, limit int) (updates []Update, err error ) 
 	return res.Result, nil
 }
 
-func (c *Client) SendMessage(chatId int, text string) error {	
+func (c *Client) SendMessage(text string) error {	
 	q := url.Values{}
-	q.Add("chat_id", strconv.Itoa(chatId))
+	q.Add("chat_id", strconv.Itoa(c.channelID))
 	q.Add("text", text)
 
 	_, err := c.makeRequest(sendMessageMethod, q)

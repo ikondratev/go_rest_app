@@ -1,71 +1,38 @@
 package settings
 
 import (
-	"bufio"
+	"log"
 	"os"
-	"strconv"
-	"strings"
+
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 const (
-	defaultPort = "7878"
-	serverPort = "PORT"
-	tgToken = "TOKEN"
-	secret = "SECRET"
-	tgChannel = "CHANEL_ID"
+	configPaht = "settings/local.yaml"
 )
 
 type Settings struct {
-	Port 	  string
-	TgToken   string
-	Secret	  string
-	ChannelID int
+	Env    	 string    `yaml:"env" env-required: "true"`
+	Secret 	 string    `yaml:"secret" env-required: "true"`
+	Port   	 string    `yaml:"port" env-required: "true" envDefault: "8080"`
+	Telegram *Telegram `yaml:"telegram"`
 }
 
-func New(file string) *Settings {
-	_ = setEnvFromFile(file)
-	port := env(serverPort, defaultPort)
-	token := env(tgToken, "")
-	secret := env(secret, "")
-	channelID, _ := strconv.Atoi(env(tgChannel, ""))
-	
-	return &Settings{
-		Port: 	 port,
-		TgToken: token,
-		Secret: secret,
-		ChannelID: channelID,
-	}
+type Telegram struct {
+	Token  string `yaml:"bot_token"`
+	ChatID int 	  `yaml:"chat_id"` 
 }
 
-func env(key, defaultValue string) string {
-	val, ok := os.LookupEnv(key)
-	if !ok {
-		return defaultValue
-	}
-	return val
-}
-
-func setEnvFromFile(filename string) error {
-	file, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) == 2 {
-			key := parts[0]
-			value := parts[1]
-			os.Setenv(key, value)
-		}
+func MustLoad() *Settings {
+	if _, err := os.Stat(configPaht); os.IsNotExist(err) {
+		log.Fatal("config file %s doesn't exist", configPaht)
 	}
 
-	if err := scanner.Err(); err != nil {
-		return err
+	var stg Settings
+
+	if err := cleanenv.ReadConfig(configPaht, &stg); err != nil {
+		log.Fatal("cannot read config: %s", err)
 	}
 
-	return nil
+	return &stg
 }
